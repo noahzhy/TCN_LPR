@@ -28,9 +28,9 @@ import tensorflow as tf
 #         x = self.fc2(x)
 #         return x
 
-class STN(tf.keras.Model):
+class STN(Layer):
     def __init__(self):
-        super().__init__()
+        super(STN, self).__init__()
         self.loc = LocNet()
 
     def call(self, x):

@@ -66,9 +66,7 @@ def train(model, train_data, val_data):
 
 
 if __name__ == '__main__':
-    inputs = Input(shape=(HEIGHT, WIDTH, CHANNEL), batch_size=BATCH_SIZE, name='input_image')
-    inputs = STN()(inputs)
-    model = TCN_LPR(inputs)
+    model = TCN_LPR()
     # model.load_weights('model.h5')
     model.summary()
     # train(model, trainGen, valGen)
