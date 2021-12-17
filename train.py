@@ -9,6 +9,7 @@ from tensorflow.compat.v1 import ConfigProto, InteractiveSession
 
 from config import *
 from models.model import *
+from models.dataloader import LicensePlateGen
 
 
 def fix_gpu():
@@ -19,6 +20,24 @@ def fix_gpu():
 
 fix_gpu()
 
+
+
+trainGen = LicensePlateGen(
+    directory=r'C:\dataset\license_plate\license_plate_recognition\train',
+    label_dict=CHARS,
+    target_size=(HEIGHT, WIDTH),
+    channel_name='G',
+    batch_size=BATCH_SIZE,
+)
+
+
+valGen = LicensePlateGen(
+    directory=r'C:\dataset\license_plate\license_plate_recognition\val',
+    label_dict=CHARS,
+    target_size=(HEIGHT, WIDTH),
+    channel_name='G',
+    batch_size=BATCH_SIZE,
+)
 
 # trainGen = ThermalDataGen(
 #     'train_data.csv',
@@ -43,12 +62,16 @@ def train(model, train_data, val_data):
             monitor='val_loss',
             save_best_only=True,
         ),
+        # ModelCheckpoint(
+        #     filepath = 'model_{epoch:02d}_{val_loss:.2f}.h5'
+        # ),
         ReduceLROnPlateau(
             monitor='val_loss',
             mode='auto',
             factor=0.1,
             patience=10,
-        )
+        ),
+        TensorBoard(log_dir='./logs'),
     ]
     model.summary()
     model.compile(
@@ -69,5 +92,5 @@ if __name__ == '__main__':
     model = TCN_LPR()
     # model.load_weights('model.h5')
     model.summary()
-    # train(model, trainGen, valGen)
-    model.save('model_tf')
+    train(model, trainGen, valGen)
+    # model.save('model_tf')

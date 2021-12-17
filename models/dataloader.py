@@ -4,6 +4,7 @@ sys.path.append('./')
 import matplotlib
 matplotlib.use('Qt5Agg')
 
+import random
 import glob
 import os
 
@@ -62,7 +63,7 @@ class LicensePlateGen(tf.keras.utils.Sequence):
 
     def on_epoch_end(self):
         if self.shuffle:
-            self.df = self.df.sample(frac=1).reset_index(drop=True)
+            random.shuffle(self.image_arr)
 
     def __get_input(self, path):
         img = cv2.imdecode(np.fromfile(
@@ -74,22 +75,21 @@ class LicensePlateGen(tf.keras.utils.Sequence):
 
     def __get_output(self, label):
         # print(label)
-        label = os.path.splitext(os.path.basename(label))[0]
+        label = os.path.splitext(os.path.basename(label))[0].split('_')[0]
         decode_dict = self.char2num(
-            tf.strings.unicode_split(label, input_encoding="UTF-8"))
+            tf.strings.unicode_split(label, input_encoding="UTF-8")
+        )
         return decode_dict
 
     def __get_data(self, batches):
-        # path_batch = batches
-        # label_batch = batches
         X_batch = np.asarray([self.__get_input(x) for x in batches])
         y_batch = np.asarray([self.__get_output(y) for y in batches])
         return X_batch, y_batch
 
     def __getitem__(self, index):
-        batches = self.image_arr[index *
-                                 self.batch_size:(index + 1) * self.batch_size]
-        print(batches)
+        batches = self.image_arr[
+            index *self.batch_size:(index + 1) * self.batch_size
+        ]
         X, y = self.__get_data(batches)
         return X, y
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     # show_images_channel(channel_name='B')
 
     generator = LicensePlateGen(
-        directory='images',
+        directory=r'C:\dataset\license_plate\license_plate_recognition\val',
         label_dict=CHARS,
         target_size=(HEIGHT, WIDTH),
         channel_name='G',
