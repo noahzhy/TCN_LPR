@@ -21,11 +21,11 @@ class CTCLoss(Layer):
 
     def call(self, y_true, y_pred):
         batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
-        input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
         label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
+        input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
 
-        input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
         label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
 
         loss = self.loss_fn(y_true, y_pred, input_length, label_length)
         self.add_loss(loss)
@@ -122,13 +122,13 @@ def TCN_LPR():
     x = FlattenedConv(256)(x)
     x = multi_line(x)
 
-    x = Dropout(rate=0.5)(x)
+    # x = Dropout(rate=0.5)(x)
 
     x = TCN([64, 64, 64, 64], kernel_size=3)(x)
     # x = logits = tf.reduce_mean(x, axis=2)
-    x = Dense(NUM_CLASSES, kernel_initializer='he_normal', activation='softmax', name='softmax')(x)
+    x = Dense(NUM_CLASSES, kernel_initializer='he_normal', activation='softmax', name='softmax0')(x)
     output = CTCLoss(name="ctc_loss")(labels, x)
-    model = Model(inputs=[inputs, labels], outputs=output)
+    model = Model(inputs=[inputs, labels], outputs=output, name='TCN_LPR')
     return model
 
 
