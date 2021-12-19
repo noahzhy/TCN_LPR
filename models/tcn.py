@@ -91,7 +91,7 @@ class TCN(Layer):
             kernel_size: int = 3,
             return_sequence: bool = False,
             dropout_rate: float = 0.25,
-            activation: str = "relu6",
+            activation: str = "relu",
             **kwargs):
 
         super(TCN, self).__init__(**kwargs)

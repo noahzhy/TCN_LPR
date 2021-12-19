@@ -3,6 +3,16 @@ import keras.backend as K
 import tensorflow as tf
 
 
+char2num = layers.StringLookup(
+    vocabulary=list(characters), mask_token=None
+)
+
+
+num2char = layers.StringLookup(
+    vocabulary=char2num.get_vocabulary(), mask_token=None, invert=True
+)
+
+
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]
     # greedy search
@@ -11,7 +21,7 @@ def decode_batch_predictions(pred):
 
     output_text = []
     for res in results:
-        res = tf.strings.reduce_join(num_to_char(res)).numpy().decode("utf-8")
+        res = tf.strings.reduce_join(num2char(res)).numpy().decode("utf-8")
         output_text.append(res)
     return output_text
 
