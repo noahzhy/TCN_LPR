@@ -136,7 +136,5 @@ class TCN(Layer):
             'depth': self.depth,
             'kernel_size': self.kernel_size,
             'return_sequence': self.return_sequence,
-            # 'dropout_rate': self.dropout_rate,
-            # 'activation': self.activation,
         })
         return config
