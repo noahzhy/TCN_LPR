@@ -26,6 +26,18 @@ def fix_gpu():
 fix_gpu()
 
 
+def calculate_acc(y_true, y_pred):
+    counter = 0
+    print(y_true.shape)
+    total = y_true.shape[1]
+    for batch in zip(y_true, y_pred):
+        if batch[0] == decode_label(batch[1]):
+            counter += 1
+
+    return round(counter/total, 8)
+
+
+
 trainGen = LicensePlateGen(
     directory=r'C:\dataset\license_plate\license_plate_recognition\train',
     # directory=r'images',
@@ -48,24 +60,27 @@ def train(model, train_data, val_data):
     callbacks_list = [
         ModelCheckpoint(
             filepath='model_tf',
-            # filepath='model.h5',
             monitor='val_loss',
             save_best_only=True,
         ),
-        # ModelCheckpoint(
-        #     filepath = 'model_{epoch:02d}_{val_loss:.2f}.h5'
-        # ),
+        EarlyStopping(
+            monitor='val_loss', 
+            patience=20, 
+            verbose=0, 
+            mode='auto'
+        ),
         ReduceLROnPlateau(
             monitor='val_loss',
             mode='auto',
             factor=0.1,
-            patience=10,
+            # patience=10,
         ),
         TensorBoard(log_dir='./logs'),
     ]
     model.compile(
         loss=lambda y_true, y_pred: y_pred,
         optimizer=Adam(learning_rate=LEARNING_RATE),
+        # metrics=['accuracy', calculate_acc]
         # run_eagerly=True
     )
     model.fit(
@@ -74,6 +89,7 @@ def train(model, train_data, val_data):
         epochs=NUM_EPOCHS,
         callbacks=callbacks_list,
         validation_data=val_data,
+        validation_freq=10,
     )
 
 

@@ -60,7 +60,7 @@ class LicensePlateGen(tf.keras.utils.Sequence):
             # img = random_augment(img)
 
             X[i] = img
-            y[i][:len(encoded_label)] = encode_label(label, CHARS_DICT)
+            y[i][:len(label)] = encode_label(label, CHARS_DICT)
 
         return [X, y], y
 

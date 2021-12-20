@@ -28,7 +28,8 @@ if __name__ == '__main__':
         custom_objects={'<lambda>': lambda y_true, y_pred: y_pred}
     )
     model = keras.models.Model(
-        model.get_layer(name="image").input, model.get_layer(name="softmax0").output
+        model.get_layer(name="image").input,
+        model.get_layer(name="softmax0").output
     )
     # model.summary()
     # model.save('model.h5')
@@ -38,3 +39,5 @@ if __name__ == '__main__':
     print(preds.shape)
     print('decode label:', decode_label(preds))
     quit()
+    # preds = [ 1,  3, 24,  2,  0,  6,  0, 85]
+    # print(decode_label(preds))
