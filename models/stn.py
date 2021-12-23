@@ -29,8 +29,8 @@ import tensorflow as tf
 #         return x
 
 class STN(Layer):
-    def __init__(self):
-        super(STN, self).__init__()
+    def __init__(self, **kwargs):
+        super(STN, self).__init__(**kwargs)
         self.loc = LocNet()
 
     def call(self, x):
@@ -146,7 +146,7 @@ def grid_sample(im, grid):
 
 
 if __name__ == '__main__':
-    inputs = Input(shape=(32, 96, 1), batch_size=1)
+    inputs = Input(shape=(48, 96, 1), batch_size=128)
     x = STN()(inputs)
     model = Model(inputs, x)
     model.summary()

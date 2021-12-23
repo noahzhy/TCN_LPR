@@ -12,6 +12,7 @@ from keras.optimizers import *
 import keras.backend as K
 import tensorflow as tf
 import keras
+from keras_flops import get_flops
 
 
 class CTCLoss(Layer):
@@ -65,22 +66,21 @@ class ConvBlock(Layer):
 
 
 class FlattenedConv(Layer):
-    def __init__(self, filters, **kwargs):
+    def __init__(self, filters, kernel_size=3, **kwargs):
         super(FlattenedConv, self).__init__(**kwargs)
         self.filters = filters
         out_dim_025 = filters//4
-        self.conv0 = Conv2D(out_dim_025, kernel_size=(
-            3, 1), padding='same', strides=1, activation='relu6')
-        self.conv1 = Conv2D(out_dim_025, kernel_size=(
-            1, 3), padding='same', strides=1, activation='relu6')
-        self.conv2 = Conv2D(filters, kernel_size=(
-            1, 1), padding='same', strides=1, activation='relu6')
+        self.conv1 = Conv2D(out_dim_025, kernel_size=[1, kernel_size],
+            padding='same', strides=1, activation='relu6')
+        self.conv2 = Conv2D(out_dim_025, kernel_size=[kernel_size, 1],
+            padding='same', strides=1, activation='relu6')
+        self.conv3 = Conv2D(filters, kernel_size=[1, 1],
+            padding='same', strides=1, activation='relu6')
 
     def call(self, inputs):
-        x31 = self.conv0(inputs)
-        x13 = self.conv1(inputs)
-        x = Concatenate()([x31, x13])
+        x = self.conv1(inputs)
         x = self.conv2(x)
+        x = self.conv3(x)
         return x
 
     def compute_output_shape(self, input_shape):
@@ -97,37 +97,42 @@ class FlattenedConv(Layer):
 
 
 def multi_line(x):
-    n, h, w, c = x.get_shape().as_list()
     top, bottom = tf.split(x, 2, axis=1)
     x = concatenate([top, bottom], axis=2)
-    return x
+    return x, top, bottom
 
 
 def TCN_LPR():
-    x = inputs = Input(shape=(HEIGHT, WIDTH, CHANNEL),
-                       name='image', dtype="float32")
-    # x = STN()(x)
+    # x = STN(name='stn')(inputs)
+    x = inputs = Input(
+        shape=(HEIGHT, WIDTH, CHANNEL),
+        name='image',
+        dtype="float32"
+    )
     labels = Input(shape=(None,), name="label", dtype="int64")
 
-    x = Conv2D(64, kernel_size=(3, 3), padding='same',
-               strides=2, activation='relu6')(x)
-    x = BatchNormalization(trainable=False)(x)
-    x = MaxPool2D(strides=(1, 1), padding='SAME')(x)
+    x = Conv2D(64, kernel_size=[3, 3], strides=[2, 1], padding='same',
+        kernel_initializer='he_normal', activation='relu6')(x)
+    x = BatchNormalization()(x)
+    x = MaxPool2D(strides=[1, 1], padding='SAME')(x)
 
-    x = FlattenedConv(128, name='flattened_conv0')(x)
+    x = FlattenedConv(128, kernel_size=3, name='flattened_conv2')(x)
     x = MaxPool2D(padding='SAME')(x)
-
-    x = FlattenedConv(128, name='flattened_conv1')(x)
+    x = FlattenedConv(128, kernel_size=3, name='flattened_conv3')(x)
     x = MaxPool2D(padding='SAME')(x)
+    # top, bottom = tf.split(x, num_or_size_splits=2, axis=1)
+    top, mid, bottom = tf.split(x, num_or_size_splits=3, axis=1)
 
-    x = FlattenedConv(256, name='flattened_conv2')(x)
-    x = multi_line(x)
-    x = Conv2D(256, kernel_size=(1, 3), padding='same',
-               strides=1, activation='relu6')(x)
+    x = FlattenedConv(256, name='flattened_conv4')(x)
 
-    # x = Dropout(rate=0.5)(x)
+    ## last version
+    top = TCN([32]*4, kernel_size=3)(top)
+    x = TCN([64]*6, kernel_size=3)(x)
+    x = Concatenate(axis=2)([top, x])
 
-    x = TCN([64, 64, 64, 64], kernel_size=5)(x)
+    x = Dropout(rate=0.25)(x)
+    # x = TCN([32, 64, 64, 128], kernel_size=3)(x)
+    # x = TCN([128, 64, 64, 32, 32], kernel_size=3)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)
@@ -140,3 +145,5 @@ def TCN_LPR():
 if __name__ == '__main__':
     model = TCN_LPR()
     model.summary()
+    flops = get_flops(model, batch_size=1)
+    print(f"FLOPS: {flops / 10 ** 9:.03} G")

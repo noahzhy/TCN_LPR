@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import keras.backend as K
 import tensorflow as tf
@@ -14,15 +15,17 @@ from keras import layers
 from config import *
 
 from utils.utils import *
+random.seed(SEED)
 
 
 
 if __name__ == '__main__':
-    image_path = r'images/A42다3311.jpg'
-    img = image_preprocess(image_path)[0]
-    img = tf.reshape(img, [-1, HEIGHT, WIDTH, 1])
+    path = TEST_DIR
+    paths = glob.glob(os.path.join(path, '*.jpg'))
+    sample_path = random.sample(paths, N_SAMPLE)
+    counter = 0
 
-    saved_model_dir = "model_tf"
+    saved_model_dir = "model_tf_9605"
     model = keras.models.load_model(
         saved_model_dir,
         custom_objects={'<lambda>': lambda y_true, y_pred: y_pred}
@@ -33,11 +36,16 @@ if __name__ == '__main__':
     )
     # model.summary()
     # model.save('model.h5')
+    for img_path in sample_path:
+        img, label = image_preprocess(img_path)
+        img = tf.reshape(img, [-1, HEIGHT, WIDTH, CHANNEL])
 
-    print(img.shape)
-    preds = model.predict(img)
-    print(preds.shape)
-    print('decode label:', decode_label(preds))
-    quit()
+        preds = model.predict(img)
+        if decode_label(preds) == label:
+            counter += 1
+    
+    print('=> val acc: {}'.format(round((counter/N_SAMPLE)*100, 4)))
+        # print('true label', label, 'decode label:', decode_label(preds))
+
     # preds = [ 1,  3, 24,  2,  0,  6,  0, 85]
     # print(decode_label(preds))

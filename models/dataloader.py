@@ -51,7 +51,7 @@ class LicensePlateGen(tf.keras.utils.Sequence):
     def __data_generation(self, batches):
         # Initialization
         X = np.empty((self.batch_size, *self.target_size, self.n_channels))
-        y = np.full((self.batch_size, 8), NUM_CLASS, dtype=int)
+        y = np.full((self.batch_size, LABEL_MAX_LEN), NUM_CLASS, dtype=int)
         # Generate data
         for i, image_path in enumerate(batches):
             img, label = image_preprocess(image_path)
