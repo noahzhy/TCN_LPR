@@ -4,6 +4,7 @@ sys.path.append('./')
 from config import *
 from models.stn import STN
 from models.tcn import TCN
+from models.ms_tcn import MS_TCN
 from keras.callbacks import *
 from keras.optimizer_v2.adam import *
 from keras.models import *
@@ -107,32 +108,30 @@ def TCN_LPR():
     x = inputs = Input(
         shape=(HEIGHT, WIDTH, CHANNEL),
         name='image',
-        dtype="float32"
+        dtype="float32",
     )
     labels = Input(shape=(None,), name="label", dtype="int64")
 
-    x = Conv2D(64, kernel_size=[3, 3], strides=[2, 1], padding='same',
-        kernel_initializer='he_normal', activation='relu6')(x)
+    x = Conv2D(64, kernel_size=[3, 3], strides=[2, 1],
+        padding='same', activation='relu6')(x)
     x = BatchNormalization()(x)
     x = MaxPool2D(strides=[1, 1], padding='SAME')(x)
 
+    x = FlattenedConv(128, kernel_size=3, name='flattened_conv1')(x)
+    x = MaxPool2D(padding='SAME')(x)
+
     x = FlattenedConv(128, kernel_size=3, name='flattened_conv2')(x)
     x = MaxPool2D(padding='SAME')(x)
-    x = FlattenedConv(128, kernel_size=3, name='flattened_conv3')(x)
-    x = MaxPool2D(padding='SAME')(x)
-    # top, bottom = tf.split(x, num_or_size_splits=2, axis=1)
-    top, mid, bottom = tf.split(x, num_or_size_splits=3, axis=1)
 
-    x = FlattenedConv(256, name='flattened_conv4')(x)
+    x = FlattenedConv(256, kernel_size=3, name='flattened_conv3')(x)
+    top, bottom = tf.split(x, num_or_size_splits=2, axis=1)
 
     ## last version
-    top = TCN([32]*4, kernel_size=3)(top)
-    x = TCN([64]*6, kernel_size=3)(x)
+    # top = TCN([32]*4, kernel_size=3)(top)
+    # x = TCN([64]*6, kernel_size=3)(x)
+    top = MS_TCN(32, kernel_size=3, depth=4)(top)
+    x = MS_TCN(64, kernel_size=3, depth=6)(x)
     x = Concatenate(axis=2)([top, x])
-
-    x = Dropout(rate=0.25)(x)
-    # x = TCN([32, 64, 64, 128], kernel_size=3)(x)
-    # x = TCN([128, 64, 64, 32, 32], kernel_size=3)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)

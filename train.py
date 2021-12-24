@@ -73,9 +73,9 @@ def train(model, train_data, val_data):
             save_best_only=True,
         ),
         EarlyStopping(
-            monitor='val_loss', 
-            patience=30, 
-            verbose=0, 
+            monitor='val_loss',
+            patience=30,
+            verbose=0,
             mode='auto'
         ),
         ReduceLROnPlateau(
