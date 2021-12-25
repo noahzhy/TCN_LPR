@@ -20,7 +20,7 @@ class DualDilatedBlock(Layer):
         self.dropout_rate = dropout_rate
 
         self.conv_1x1_in = Conv1D(filters, kernel_size=1, padding="same")
-        self.conv_dilated_1 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[0], activation='tanh')
+        self.conv_dilated_1 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[0], activation='relu6')
         self.conv_dilated_2 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[1], activation='relu6')
         self.concat = Concatenate(axis=-1)
         self.dropout = Dropout(dropout_rate)
@@ -119,7 +119,7 @@ class MS_TCN(Layer):
 
         super(MS_TCN, self).__init__(**kwargs)
         self.blocks = []
-        self.depth = depth
+        self.depth = depth//2
         self.kernel_size = kernel_size
         self.return_sequence = return_sequence
 
@@ -134,7 +134,7 @@ class MS_TCN(Layer):
                 )
             )
 
-        for i in range(2):
+        for i in range(self.depth):
             dilation_size = 2 ** i
             self.blocks.append(
                 ResidualBlock(
