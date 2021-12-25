@@ -124,7 +124,7 @@ class MS_TCN(Layer):
         self.return_sequence = return_sequence
 
         for j in range(self.depth):
-            dilation_size_conv_1 = 2** (self.depth-1-j)
+            dilation_size_conv_1 = 2 ** (self.depth-1-j)
             dilation_size_conv_2 = 2 ** j
             self.blocks.append(
                 DualDilatedBlock(
