@@ -74,7 +74,7 @@ def train(model, train_data, val_data):
         ),
         EarlyStopping(
             monitor='val_loss',
-            patience=30,
+            patience=50,
             verbose=0,
             mode='auto'
         ),
@@ -82,7 +82,7 @@ def train(model, train_data, val_data):
             monitor='val_loss',
             mode='auto',
             factor=0.5,
-            patience=15,
+            patience=20,
         ),
         TensorBoard(log_dir='./logs'),
         warm_up_lr,

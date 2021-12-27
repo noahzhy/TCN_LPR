@@ -129,8 +129,8 @@ def TCN_LPR():
     ## last version
     # top = TCN([32]*4, kernel_size=3)(top)
     # x = TCN([64]*6, kernel_size=3)(x)
-    top = MS_TCN(32, kernel_size=3, depth=6)(top)
-    x = MS_TCN(64, kernel_size=3, depth=8)(x)
+    top = MS_TCN(32, kernel_size=3, depth=8)(top)
+    x = MS_TCN(64, kernel_size=3, depth=12)(x)
     x = Concatenate(axis=2)([top, x])
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
