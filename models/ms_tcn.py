@@ -8,6 +8,37 @@ import tensorflow as tf
 import keras
 
 
+class SeparableConv(Layer):
+    def __init__(self, filters, kernel_size=3, **kwargs):
+        super(SeparableConv, self).__init__(**kwargs)
+        self.filters = filters
+        out_dim_025 = filters//4
+        self.conv1 = Conv2D(out_dim_025, kernel_size=[1, kernel_size],
+            padding='same', strides=1, activation='relu6')
+        self.conv2 = Conv2D(out_dim_025, kernel_size=[kernel_size, 1],
+            padding='same', strides=1, activation='relu6')
+        self.conv3 = Conv2D(filters, kernel_size=[1, 1],
+            padding='same', strides=1, activation='relu6')
+
+    def call(self, inputs):
+        x = self.conv1(inputs)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        return x
+
+    def compute_output_shape(self, input_shape):
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.filters
+        return tf.TensorShape(shape)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "filters": self.filters,
+        })
+        return config
+
+
 class DualDilatedBlock(Layer):
     def __init__(self,
                 filters,

@@ -66,9 +66,9 @@ class ConvBlock(Layer):
         return config
 
 
-class FlattenedConv(Layer):
+class Separable_Conv(Layer):
     def __init__(self, filters, kernel_size=3, **kwargs):
-        super(FlattenedConv, self).__init__(**kwargs)
+        super(Separable_Conv, self).__init__(**kwargs)
         self.filters = filters
         out_dim_025 = filters//4
         self.conv1 = Conv2D(out_dim_025, kernel_size=[1, kernel_size],
@@ -117,20 +117,18 @@ def TCN_LPR():
     x = BatchNormalization()(x)
     x = MaxPool2D(strides=[1, 1], padding='SAME')(x)
 
-    x = FlattenedConv(128, kernel_size=3, name='flattened_conv1')(x)
+    x = Separable_Conv(128, kernel_size=3, name='separable_conv_1')(x)
     x = MaxPool2D(padding='SAME')(x)
 
-    x = FlattenedConv(128, kernel_size=3, name='flattened_conv2')(x)
+    x = Separable_Conv(128, kernel_size=3, name='separable_conv_2')(x)
     x = MaxPool2D(padding='SAME')(x)
 
-    x = FlattenedConv(256, kernel_size=3, name='flattened_conv3')(x)
+    x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
     top, bottom = tf.split(x, num_or_size_splits=2, axis=1)
 
     ## last version
-    # top = TCN([32]*4, kernel_size=3)(top)
-    # x = TCN([64]*6, kernel_size=3)(x)
-    top = MS_TCN(32, kernel_size=3, depth=8)(top)
-    x = MS_TCN(64, kernel_size=3, depth=12)(x)
+    top = MS_TCN(32, kernel_size=3, depth=6)(top)
+    x = MS_TCN(64, kernel_size=3, depth=8)(x)
     x = Concatenate(axis=2)([top, x])
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
