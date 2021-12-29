@@ -1,19 +1,20 @@
-# from tensorflow.keras import *
 import sys
+
 sys.path.append('./')
-from config import *
-from models.stn import STN
-from models.tcn import TCN
-from models.ms_tcn import MS_TCN
-from keras.callbacks import *
-from keras.optimizer_v2.adam import *
-from keras.models import *
-from keras.layers import *
-from keras.optimizers import *
+import keras
 import keras.backend as K
 import tensorflow as tf
-import keras
+from config import *
+from keras.callbacks import *
+from keras.layers import *
+from keras.models import *
+from keras.optimizer_v2.adam import *
+from keras.optimizers import *
 from keras_flops import get_flops
+
+from models.ms_tcn import MS_TCN
+from models.stn import STN
+from models.tcn import TCN
 
 
 class CTCLoss(Layer):
@@ -25,6 +26,48 @@ class CTCLoss(Layer):
         input_length = K.tile([[K.shape(y_pred)[1]]], [K.shape(y_pred)[0], 1])
         label_length = K.tile([[K.shape(y_true)[1]]], [K.shape(y_true)[0], 1])
         return self.loss_fn(y_true, y_pred, input_length, label_length)
+
+
+class GCM(Layer):
+    def __init__(self, filters, pool_size, r=16, **kwargs):
+        super(GCM, self).__init__(**kwargs)
+        # self.filters = filters
+        self.pool_size = pool_size
+        # self.conv1x1 = Conv1D(filters, kernel_size=1, strides=1, padding='same')
+        # self.softmax = Activation('softmax')
+        # self.mul = Multiply()
+        # self.conv1x1_in = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        # self.relu = Activation('relu6')
+        # self.conv1x1_out = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        # self.add = Add()
+
+        self.gap = AveragePooling2D(pool_size=pool_size, padding='same')
+
+    def call(self, inputs):
+        # x = self.conv1x1(inputs)
+        # x = self.softmax(x)
+        # x = self.mul([inputs, x])
+
+        # x = self.conv1x1_in(x)
+        # x = self.relu(x)
+        # x = self.conv1x1_out(x)
+        # x = self.add([inputs, x])
+
+        x = self.gap(inputs)
+        return x
+
+    def compute_output_shape(self, input_shape):
+        shape = tf.TensorShape(input_shape).as_list()
+        # shape[-1] = self.filters
+        return tf.TensorShape(shape)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            # "filters": self.filters,
+            "pool_size": self.pool_size,
+        })
+        return config
 
 
 class ConvBlock(Layer):
@@ -112,24 +155,30 @@ def TCN_LPR():
     )
     labels = Input(shape=(None,), name="label", dtype="int64")
 
-    x = Conv2D(64, kernel_size=[3, 3], strides=[2, 1],
-        padding='same', activation='relu6')(x)
+    x = Conv2D(64, kernel_size=[3, 3], strides=[2, 1], padding='same')(x)
     x = BatchNormalization()(x)
+    x = Activation('relu6')(x)
     x = MaxPool2D(strides=[1, 1], padding='SAME')(x)
 
     x = Separable_Conv(128, kernel_size=3, name='separable_conv_1')(x)
+    t1, _ = tf.split(x, num_or_size_splits=2, axis=1)
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(128, kernel_size=3, name='separable_conv_2')(x)
+    t2, _ = tf.split(x, num_or_size_splits=2, axis=1)
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
-    top, bottom = tf.split(x, num_or_size_splits=2, axis=1)
+    _, bottom = tf.split(x, num_or_size_splits=2, axis=1)
 
-    ## last version
-    top = MS_TCN(32, kernel_size=3, depth=6)(top)
-    x = MS_TCN(64, kernel_size=3, depth=8)(x)
-    x = Concatenate(axis=2)([top, x])
+    g1 = GCM(128, 4)(t1)
+    g2 = GCM(128, 2)(t2)
+
+    top = Concatenate(axis=-1)([g1, g2])
+
+    x = Concatenate(axis=2)([top, bottom])
+
+    x = MS_TCN(64, kernel_size=3, depth=12)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)

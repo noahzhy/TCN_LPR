@@ -45,10 +45,10 @@ valGen = LicensePlateGen(
     batch_size=BATCH_SIZE,
 )
 
-warmup_batches = WARMUP_EPOCH * 112385 / BATCH_SIZE
-total_steps = int(NUM_EPOCHS * 112385 / BATCH_SIZE)
+warmup_batches = WARMUP_EPOCH * TRAIN_SAMPLE / BATCH_SIZE
+total_steps = int(NUM_EPOCHS * TRAIN_SAMPLE / BATCH_SIZE)
 # Compute the number of warmup batches.
-warmup_steps = int(WARMUP_EPOCH * 112385 / BATCH_SIZE)
+warmup_steps = int(WARMUP_EPOCH * TRAIN_SAMPLE / BATCH_SIZE)
 
 # Create the Learning rate scheduler.
 warm_up_lr = WarmUpCosineDecayScheduler(

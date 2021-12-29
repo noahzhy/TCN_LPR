@@ -53,14 +53,14 @@ class DualDilatedBlock(Layer):
         self.conv_1x1_in = Conv1D(filters, kernel_size=1, padding="same")
         self.conv_dilated_1 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[0], activation='relu6')
         self.conv_dilated_2 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[1], activation='relu6')
-        self.concat = Concatenate(axis=-1)
+        self.multi = Multiply()
         self.dropout = Dropout(dropout_rate)
         self.conv_1x1_out = Conv1D(filters, kernel_size=1, padding='same')
         self.add = Add()
 
     def call(self, inputs):
         x = shortcut = self.conv_1x1_in(inputs)
-        x = self.concat([self.conv_dilated_1(x), self.conv_dilated_2(x)])
+        x = self.multi([self.conv_dilated_1(x), self.conv_dilated_2(x)])
         x = self.dropout(x)
         x = self.conv_1x1_out(x)
         x = self.add([x, shortcut])

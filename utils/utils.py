@@ -47,9 +47,13 @@ def image_preprocess(image_path, channel_name='G'):
         image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
     img = cv2.resize(img, (WIDTH, HEIGHT))
     img = pick_channel(img, channel_name)
+    # mean_px = X.mean().astype(np.float32) 
+    # std_px = X.std().astype(np.float32) 
+    # X = (X - mean_px)/(std_px)
     img = np.expand_dims(img, axis=-1)
 
     label = os.path.splitext(os.path.basename(image_path))[0].split('_')[0]
+    label = label.replace(' ', '')
     return img/255., label
 
 

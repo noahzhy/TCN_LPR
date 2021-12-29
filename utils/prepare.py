@@ -5,7 +5,7 @@ from pathlib import Path
 from shutil import copyfile
 
 
-CHARS = "0123456789가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주하허호바사아자배abcdefghijklmnopqABCDEFGHIJKLMNOPQ "  # exclude IO
+CHARS = " 0123456789가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주하허호바사아자배abcdefghijklmnopqABCDEFGHIJKLMNOPQ"  # exclude IO
 
 
 def divide_dataset(root_path, train_target_dir, val_target_dir):
@@ -33,21 +33,20 @@ def clean_data(path):
         base_name = os.path.basename(i)
         f_name = base_name.split('_')[0]
         print(base_name)
-        for f in f_name:
-            if f not in CHARS:
-                os.rename(i, os.path.join(r'C:\dataset\license_plate\license_plate_recognition\tmp', base_name))
-
-
+        os.rename(i, i.replace('이', '아'))
+        # for f in f_name:
+            # if f not in CHARS:
+            #     os.rename(i, os.path.join(r'C:\dataset\license_plate\license_plate_recognition\tmp', base_name))
 
 
 if __name__ == '__main__':
-    # original_path = "C:/dataset/license_plate/license_plate_recognition/total"
-    # train_target_dir = "C:/dataset/license_plate/license_plate_recognition/train"
-    # val_target_dir = "C:/dataset/license_plate/license_plate_recognition/val"
+    original_path = r"C:\dataset\license_plate\license_plate_recognition\double\double"
+    train_target_dir = r"C:\dataset\license_plate\license_plate_recognition\double\train"
+    val_target_dir = r"C:\dataset\license_plate\license_plate_recognition\double\val"
 
-    # Path(train_target_dir).mkdir(exist_ok=True, parents=True)
-    # Path(val_target_dir).mkdir(exist_ok=True, parents=True)
+    Path(train_target_dir).mkdir(exist_ok=True, parents=True)
+    Path(val_target_dir).mkdir(exist_ok=True, parents=True)
 
-    # divide_dataset(original_path, train_target_dir, val_target_dir)
-    clean_data(r'C:\dataset\license_plate\license_plate_recognition\val')
+    divide_dataset(original_path, train_target_dir, val_target_dir)
+    # clean_data(r'C:\dataset\license_plate\license_plate_recognition\tmp')
     pass
