@@ -28,9 +28,9 @@ class CTCLoss(Layer):
         return self.loss_fn(y_true, y_pred, input_length, label_length)
 
 
-class FPN(Layer):
+class CEM(Layer):
     def __init__(self, filters, **kwargs):
-        super(FPN, self).__init__(**kwargs)
+        super(CEM, self).__init__(**kwargs)
         self.filters = filters
         self.conv1x1_0 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
         self.conv1x1_1 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
@@ -48,6 +48,40 @@ class FPN(Layer):
 
         # t3 = self.conv1x1_2(t3)
         t3 = self.upsample_x4(t3)
+
+        return self.add([t1, t2, t3])
+
+    def compute_output_shape(self, input_shape):
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.filters
+        return tf.TensorShape(shape)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "filters": self.filters,
+        })
+        return config
+
+
+class PCM(Layer):
+    def __init__(self, filters, **kwargs):
+        super(PCM, self).__init__(**kwargs)
+        self.filters = filters
+        self.conv1x1_0 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        self.conv1x1_1 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        # self.conv1x1_2 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        self.ap_x1 = AvgPool2D(pool_size=(2, 2), padding='same')
+        self.ap_x2 = AvgPool2D(pool_size=(4, 4), padding='same')
+        self.add = Add()
+
+    def call(self, inputs):
+        t1, t2, t3 = inputs
+        t1 = self.ap_x2(t1)
+        t1 = self.conv1x1_0(t1)
+    
+        t2 = self.ap_x1(t2)
+        t2 = self.conv1x1_1(t2)
 
         return self.add([t1, t2, t3])
 
@@ -188,15 +222,20 @@ def TCN_LPR():
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
-    _, bottom = tf.split(x, num_or_size_splits=2, axis=1)
+    t3, _ = tf.split(x, num_or_size_splits=2, axis=1)
+    x = MaxPool2D(padding='SAME')(x)
 
-    g1 = GCM(4)(t1)
-    g2 = GCM(2)(t2)
-    top = Concatenate(axis=-1)([g1, g2])
-    x = GlobalAveragePooling2D(keepdims=True)(x)
-    # top = Conv2D(256, kernel_size=[1, 1], padding='same')(top)
+    x = Separable_Conv(256, kernel_size=3, name='separable_conv_4')(x)
+    # x = MaxPool2D(padding='SAME')(x)
 
-    x = Concatenate(axis=2)([top, bottom])
+    # g1 = GCM(4)(t1)
+    # g2 = GCM(2)(t2)
+    # g3 = GCM(1)(t3)
+    # top = Concatenate(axis=-1)([g1, g2, g3])
+    
+    top = PCM(256)([t1, t2, t3])
+
+    x = Concatenate(axis=2)([top, x])
     # x = Conv2D(256, kernel_size=[1, 1], padding='same')(x)
 
     x = MS_TCN(64, kernel_size=3, depth=12)(x)
