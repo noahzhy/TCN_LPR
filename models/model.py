@@ -28,32 +28,52 @@ class CTCLoss(Layer):
         return self.loss_fn(y_true, y_pred, input_length, label_length)
 
 
-class GCM(Layer):
-    def __init__(self, filters, pool_size, r=16, **kwargs):
-        super(GCM, self).__init__(**kwargs)
-        # self.filters = filters
-        self.pool_size = pool_size
-        # self.conv1x1 = Conv1D(filters, kernel_size=1, strides=1, padding='same')
-        # self.softmax = Activation('softmax')
-        # self.mul = Multiply()
-        # self.conv1x1_in = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
-        # self.relu = Activation('relu6')
-        # self.conv1x1_out = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
-        # self.add = Add()
-
-        self.gap = AveragePooling2D(pool_size=pool_size, padding='same')
+class FPN(Layer):
+    def __init__(self, filters, **kwargs):
+        super(FPN, self).__init__(**kwargs)
+        self.filters = filters
+        self.conv1x1_0 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        self.conv1x1_1 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        # self.conv1x1_2 = Conv2D(filters, kernel_size=[1, 1], strides=[1, 1], padding='same')
+        self.upsample_x2 = UpSampling2D(size=(2,2))
+        self.upsample_x4 = UpSampling2D(size=(4,4))
+        self.add = Add()
 
     def call(self, inputs):
-        # x = self.conv1x1(inputs)
-        # x = self.softmax(x)
-        # x = self.mul([inputs, x])
+        t1, t2, t3 = inputs
+        t1 = self.conv1x1_0(t1)
+    
+        t2 = self.conv1x1_1(t2)
+        t2 = self.upsample_x2(t2)
 
-        # x = self.conv1x1_in(x)
-        # x = self.relu(x)
-        # x = self.conv1x1_out(x)
-        # x = self.add([inputs, x])
+        # t3 = self.conv1x1_2(t3)
+        t3 = self.upsample_x4(t3)
 
-        x = self.gap(inputs)
+        return self.add([t1, t2, t3])
+
+    def compute_output_shape(self, input_shape):
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.filters
+        return tf.TensorShape(shape)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "filters": self.filters,
+        })
+        return config
+
+
+class GCM(Layer):
+    def __init__(self, pool_size, **kwargs):
+        super(GCM, self).__init__(**kwargs)
+        self.pool_size = pool_size
+        self.ap = AveragePooling2D(pool_size=pool_size, padding='same')
+
+    def call(self, inputs):
+        x = pool = self.ap(inputs)
+        # x = tf.reduce_mean(tf.square(x))
+        # x = tf.compat.v1.div(pool, x)
         return x
 
     def compute_output_shape(self, input_shape):
@@ -64,7 +84,6 @@ class GCM(Layer):
     def get_config(self):
         config = super().get_config()
         config.update({
-            # "filters": self.filters,
             "pool_size": self.pool_size,
         })
         return config
@@ -171,12 +190,14 @@ def TCN_LPR():
     x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
     _, bottom = tf.split(x, num_or_size_splits=2, axis=1)
 
-    g1 = GCM(128, 4)(t1)
-    g2 = GCM(128, 2)(t2)
-
+    g1 = GCM(4)(t1)
+    g2 = GCM(2)(t2)
     top = Concatenate(axis=-1)([g1, g2])
+    x = GlobalAveragePooling2D(keepdims=True)(x)
+    # top = Conv2D(256, kernel_size=[1, 1], padding='same')(top)
 
     x = Concatenate(axis=2)([top, bottom])
+    # x = Conv2D(256, kernel_size=[1, 1], padding='same')(x)
 
     x = MS_TCN(64, kernel_size=3, depth=12)(x)
 
