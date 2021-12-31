@@ -74,7 +74,7 @@ def train(model, train_data, val_data):
         ),
         EarlyStopping(
             monitor='val_loss',
-            patience=50,
+            patience=80,
             verbose=0,
             mode='auto'
         ),

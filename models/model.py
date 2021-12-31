@@ -222,10 +222,12 @@ def TCN_LPR():
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
-    t3, _ = tf.split(x, num_or_size_splits=2, axis=1)
-    x = MaxPool2D(padding='SAME')(x)
+    t3, bottom = tf.split(x, num_or_size_splits=2, axis=1)
+    # x = MaxPool2D(padding='SAME')(x)
 
-    x = Separable_Conv(256, kernel_size=3, name='separable_conv_4')(x)
+    # x = Separable_Conv(256, kernel_size=3, name='separable_conv_4')(x)
+    # x = Conv2D(256, kernel_size=[2, 1], padding='same')(x)
+
     # x = MaxPool2D(padding='SAME')(x)
 
     # g1 = GCM(4)(t1)
@@ -235,10 +237,9 @@ def TCN_LPR():
     
     top = PCM(256)([t1, t2, t3])
 
-    x = Concatenate(axis=2)([top, x])
-    # x = Conv2D(256, kernel_size=[1, 1], padding='same')(x)
+    x = Concatenate(axis=2)([top, bottom])
 
-    x = MS_TCN(64, kernel_size=3, depth=12)(x)
+    x = MS_TCN(96, kernel_size=3, depth=8)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)
