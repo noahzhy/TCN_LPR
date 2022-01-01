@@ -25,5 +25,5 @@ TRAIN_DIR = r'C:\dataset\license_plate\license_plate_recognition\train'
 VAL_DIR = r'C:\dataset\license_plate\license_plate_recognition\val'
 # TRAIN_DIR = r'C:\dataset\license_plate\license_plate_recognition\double\train'
 # VAL_DIR = r'C:\dataset\license_plate\license_plate_recognition\double\val'
-TEST_DIR = VAL_DIR
-# TEST_DIR = r'C:\dataset\license_plate\license_plate_recognition\double\val'
+# TEST_DIR = VAL_DIR
+TEST_DIR = r'C:\dataset\license_plate\license_plate_recognition\single\alpha\val'

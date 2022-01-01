@@ -5,7 +5,7 @@ from pathlib import Path
 from shutil import copyfile
 
 
-CHARS = " 0123456789가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주하허호바사아자배abcdefghijklmnopqABCDEFGHIJKLMNOPQ"  # exclude IO
+CHARS = "0123456789가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주하허호바사아자배abcdefghijklmnopqABCDEFGHIJKLMNOPQ"  # exclude IO
 
 
 def divide_dataset(root_path, train_target_dir, val_target_dir):
@@ -40,9 +40,9 @@ def clean_data(path):
 
 
 if __name__ == '__main__':
-    original_path = r"C:\dataset\license_plate\license_plate_recognition\double\double"
-    train_target_dir = r"C:\dataset\license_plate\license_plate_recognition\double\train"
-    val_target_dir = r"C:\dataset\license_plate\license_plate_recognition\double\val"
+    original_path = r"C:\dataset\license_plate\license_plate_recognition\single\alpha"
+    train_target_dir = r"C:\dataset\license_plate\license_plate_recognition\single\alpha\train"
+    val_target_dir = r"C:\dataset\license_plate\license_plate_recognition\single\alpha\val"
 
     Path(train_target_dir).mkdir(exist_ok=True, parents=True)
     Path(val_target_dir).mkdir(exist_ok=True, parents=True)

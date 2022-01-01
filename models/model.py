@@ -239,7 +239,7 @@ def TCN_LPR():
 
     x = Concatenate(axis=2)([top, bottom])
 
-    x = MS_TCN(96, kernel_size=3, depth=8)(x)
+    x = MS_TCN(128, kernel_size=3, depth=8)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)
