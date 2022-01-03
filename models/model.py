@@ -214,18 +214,15 @@ def TCN_LPR():
     x = MaxPool2D(strides=[1, 1], padding='SAME')(x)
 
     x = Separable_Conv(128, kernel_size=3, name='separable_conv_1')(x)
-    t1 = x
-    # t1, _ = tf.split(x, num_or_size_splits=2, axis=1)
+    t1, _ = tf.split(x, num_or_size_splits=2, axis=1)
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(128, kernel_size=3, name='separable_conv_2')(x)
-    t2 = x
-    # t2, _ = tf.split(x, num_or_size_splits=2, axis=1)
+    t2, _ = tf.split(x, num_or_size_splits=2, axis=1)
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
-    t3 = x
-    # t3, bottom = tf.split(x, num_or_size_splits=2, axis=1)
+    t3, bottom = tf.split(x, num_or_size_splits=2, axis=1)
     # x = MaxPool2D(padding='SAME')(x)
 
     # x = Separable_Conv(256, kernel_size=3, name='separable_conv_4')(x)
@@ -239,7 +236,6 @@ def TCN_LPR():
     # top = Concatenate(axis=-1)([g1, g2, g3])
     
     top = PCM(256)([t1, t2, t3])
-    top, bottom = tf.split(top, num_or_size_splits=2, axis=1)
 
     x = Concatenate(axis=2)([top, bottom])
 
