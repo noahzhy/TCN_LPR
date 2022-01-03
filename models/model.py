@@ -265,7 +265,7 @@ def TCN_LPR():
     # g3 = GCM(1)(t3)
     # x = Concatenate(axis=-1)([g1, g2, g3])
 
-    # x = DCM(256)([t1, t2, t3])
+    x = PCM(256)([t1, t2, t3])
 
     x = TCN([128]*6, kernel_size=3)(x)
     # x = MS_TCN(128, kernel_size=3, depth=8)(x)
