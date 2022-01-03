@@ -4,12 +4,12 @@ HEIGHT = 24
 CHANNEL = 1
 
 SEED = 1234
-N_SAMPLE = 1000
+N_SAMPLE = 500
 # training config
-BATCH_SIZE = 512
-TRAIN_SAMPLE = 104916
+BATCH_SIZE = 256
+TRAIN_SAMPLE = 5295
 NUM_EPOCHS = 200
-WARMUP_EPOCH = 10
+WARMUP_EPOCH = 5
 LEARNING_RATE = 1e-3
 # LEARNING_RATE = 3e-4
 
@@ -23,7 +23,8 @@ LABEL_MAX_LEN = 8
 
 # TRAIN_DIR = r'C:\dataset\license_plate\license_plate_recognition\train'
 # VAL_DIR = r'C:\dataset\license_plate\license_plate_recognition\val'
-TRAIN_DIR = r'C:\dataset\license_plate\license_plate_recognition\single\train'
-VAL_DIR = r'C:\dataset\license_plate\license_plate_recognition\single\val'
+TRAIN_DIR = r'C:\dataset\license_plate\mini_LPR_dataset\train'
+VAL_DIR = r'C:\dataset\license_plate\mini_LPR_dataset\val'
+
 TEST_DIR = VAL_DIR
 # TEST_DIR = r'C:\dataset\license_plate\license_plate_recognition\single\val'

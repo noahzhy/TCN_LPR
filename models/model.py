@@ -64,6 +64,43 @@ class CEM(Layer):
         return config
 
 
+class DCM(Layer):
+    def __init__(self, filters, **kwargs):
+        super(DCM, self).__init__(**kwargs)
+        self.filters = filters
+        self.dc2 = Conv2D(
+            filters, kernel_size=[3, 3], strides=[1, 1],
+            padding='same', dilation_rate=2)
+        self.dc4 = Conv2D(
+            filters, kernel_size=[3, 3], strides=[1, 1],
+            padding='same', dilation_rate=4)
+        self.ap_x1 = AvgPool2D(pool_size=(2, 2), padding='same')
+        self.ap_x2 = AvgPool2D(pool_size=(4, 4), padding='same')
+        self.add = Add()
+
+    def call(self, inputs):
+        t1, t2, t3 = inputs
+        t1 = self.ap_x2(t1)
+        t1 = self.dc4(t1)
+
+        t2 = self.ap_x1(t2)
+        t2 = self.dc2(t2)
+
+        return self.add([t1, t2, t3])
+
+    def compute_output_shape(self, input_shape):
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.filters
+        return tf.TensorShape(shape)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "filters": self.filters,
+        })
+        return config
+
+
 class PCM(Layer):
     def __init__(self, filters, **kwargs):
         super(PCM, self).__init__(**kwargs)
@@ -227,10 +264,11 @@ def TCN_LPR():
     # g2 = GCM(2)(t2)
     # g3 = GCM(1)(t3)
     # x = Concatenate(axis=-1)([g1, g2, g3])
-    
-    x = PCM(256)([t1, t2, t3])
 
-    x = TCN([64]*8, kernel_size=3)(x)
+    # x = DCM(256)([t1, t2, t3])
+
+    x = TCN([128]*6, kernel_size=3)(x)
+    # x = MS_TCN(128, kernel_size=3, depth=8)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)
