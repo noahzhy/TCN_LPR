@@ -12,6 +12,6 @@
 
 |           Original image            |              R channel              |              G channel              |              B channel              |
 | :---------------------------------: | :---------------------------------: | :---------------------------------: | :---------------------------------: |
-| ![Figure_1](materials/Figure_1.png) | ![Figure_R](materials/Figure_R.png) | ![Figure_G](materials/Figure_G.png) | ![Figure_B](materials/Figure_B.png) |
+| ![Figure_1](docs/Figure_1.png) | ![Figure_R](docs/Figure_R.png) | ![Figure_G](docs/Figure_G.png) | ![Figure_B](docs/Figure_B.png) |
 
 上方表格左侧为韩国常见的几种车牌类型，通过对其RGB通道单独分离不难看出，在单独G通道下，车牌的显像效果最为显著，受影响较小。

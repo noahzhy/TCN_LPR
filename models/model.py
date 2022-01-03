@@ -106,13 +106,10 @@ class GCM(Layer):
 
     def call(self, inputs):
         x = pool = self.ap(inputs)
-        # x = tf.reduce_mean(tf.square(x))
-        # x = tf.compat.v1.div(pool, x)
         return x
 
     def compute_output_shape(self, input_shape):
         shape = tf.TensorShape(input_shape).as_list()
-        # shape[-1] = self.filters
         return tf.TensorShape(shape)
 
     def get_config(self):
@@ -211,35 +208,29 @@ def TCN_LPR():
     x = Conv2D(64, kernel_size=[3, 3], strides=[2, 1], padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation('relu6')(x)
+    t0 = x
     x = MaxPool2D(strides=[1, 1], padding='SAME')(x)
 
     x = Separable_Conv(128, kernel_size=3, name='separable_conv_1')(x)
-    t1, _ = tf.split(x, num_or_size_splits=2, axis=1)
+    t1 = x
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(128, kernel_size=3, name='separable_conv_2')(x)
-    t2, _ = tf.split(x, num_or_size_splits=2, axis=1)
+    t2 = x
     x = MaxPool2D(padding='SAME')(x)
 
     x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
-    t3, bottom = tf.split(x, num_or_size_splits=2, axis=1)
-    # x = MaxPool2D(padding='SAME')(x)
-
-    # x = Separable_Conv(256, kernel_size=3, name='separable_conv_4')(x)
-    # x = Conv2D(256, kernel_size=[2, 1], padding='same')(x)
-
+    t3 = x
     # x = MaxPool2D(padding='SAME')(x)
 
     # g1 = GCM(4)(t1)
     # g2 = GCM(2)(t2)
     # g3 = GCM(1)(t3)
-    # top = Concatenate(axis=-1)([g1, g2, g3])
+    # x = Concatenate(axis=-1)([g1, g2, g3])
     
-    top = PCM(256)([t1, t2, t3])
+    x = PCM(256)([t1, t2, t3])
 
-    x = Concatenate(axis=2)([top, bottom])
-
-    x = MS_TCN(128, kernel_size=3, depth=8)(x)
+    x = TCN([64]*8, kernel_size=3)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)
