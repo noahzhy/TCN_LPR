@@ -20,11 +20,11 @@ random.seed(SEED)
 
 
 if __name__ == '__main__':
-    path = r'C:\dataset\license_plate\license_plate_recognition\DatasetId_271674_1640677605\cut'
+    path = r'C:\Users\go\Desktop\cut_12.30'
     paths = glob.glob(os.path.join(path, '*.jpg'))
     counter = 0
 
-    saved_model_dir = "model_tf_9700"
+    saved_model_dir = "model_tf_9770"
     model = keras.models.load_model(
         saved_model_dir,
         custom_objects={'<lambda>': lambda y_true, y_pred: y_pred}
