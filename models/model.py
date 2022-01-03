@@ -260,12 +260,12 @@ def TCN_LPR():
     t3 = x
     # x = MaxPool2D(padding='SAME')(x)
 
-    # g1 = GCM(4)(t1)
-    # g2 = GCM(2)(t2)
-    # g3 = GCM(1)(t3)
-    # x = Concatenate(axis=-1)([g1, g2, g3])
+    g1 = GCM(4)(t1)
+    g2 = GCM(2)(t2)
+    g3 = GCM(1)(t3)
+    x = Concatenate(axis=-1)([g1, g2, g3])
 
-    x = PCM(256)([t1, t2, t3])
+    # x = PCM(256)([t1, t2, t3])
 
     x = TCN([128]*6, kernel_size=3)(x)
     # x = MS_TCN(128, kernel_size=3, depth=8)(x)
