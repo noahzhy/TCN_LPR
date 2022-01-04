@@ -21,6 +21,7 @@ random.seed(SEED)
 f = open('test_error.csv', 'w+', encoding="utf-8")
 f.write("correct,error\n")
 
+
 if __name__ == '__main__':
     path = TEST_DIR
     paths = glob.glob(os.path.join(path, '*.jpg'))
