@@ -51,8 +51,12 @@ class DualDilatedBlock(Layer):
         self.dropout_rate = dropout_rate
 
         self.conv_1x1_in = Conv1D(filters, kernel_size=1, padding="same")
-        self.conv_dilated_1 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[0], activation='relu6')
-        self.conv_dilated_2 = Conv1D(filters, kernel_size=3, padding="same", dilation_rate=dilation_rate[1], activation='relu6')
+        self.conv_dilated_1 = Conv1D(filters,
+            kernel_size=3, padding="causal", use_bias=False, 
+            dilation_rate=dilation_rate[0], activation='relu6')
+        self.conv_dilated_2 = Conv1D(filters,
+            kernel_size=3, padding="causal", use_bias=False,
+            dilation_rate=dilation_rate[1], activation='relu6')
         self.multi = Multiply()
         self.dropout = Dropout(dropout_rate)
         self.conv_1x1_out = Conv1D(filters, kernel_size=1, padding='same')
@@ -150,7 +154,7 @@ class MS_TCN(Layer):
 
         super(MS_TCN, self).__init__(**kwargs)
         self.blocks = []
-        self.depth = depth//2
+        self.depth = depth
         self.kernel_size = kernel_size
         self.return_sequence = return_sequence
 
@@ -165,18 +169,18 @@ class MS_TCN(Layer):
                 )
             )
 
-        for i in range(self.depth):
-            dilation_size = 2 ** i
-            self.blocks.append(
-                ResidualBlock(
-                    filters=filters,
-                    kernel_size=kernel_size,
-                    dilation_rate=dilation_size,
-                    dropout_rate=dropout_rate,
-                    activation=activation,
-                    name=f"residual_block_{i}"
-                )
-            )
+        # for i in range(self.depth):
+        #     dilation_size = 2 ** i
+        #     self.blocks.append(
+        #         ResidualBlock(
+        #             filters=filters,
+        #             kernel_size=kernel_size,
+        #             dilation_rate=dilation_size,
+        #             dropout_rate=dropout_rate,
+        #             activation=activation,
+        #             name=f"residual_block_{i}"
+        #         )
+        #     )
 
         if not self.return_sequence:
             self.slice_layer = Lambda(lambda tt: tt[:, -1, :])

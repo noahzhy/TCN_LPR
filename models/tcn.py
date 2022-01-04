@@ -12,7 +12,8 @@ class ResidualBlock(Layer):
     def __init__(self,
                  filters: int,
                  kernel_size: int,
-                 dilation_rate: int,
+                 dilation_rate_left: int,
+                 dilation_rate_right: int,
                  dropout_rate: float,
                  activation: str,
                  **kwargs):
@@ -22,8 +23,8 @@ class ResidualBlock(Layer):
         self.causal_conv_1 = Conv1D(
             filters=self.filters,
             kernel_size=kernel_size,
-            dilation_rate=dilation_rate,
-            padding='causal',
+            dilation_rate=dilation_rate_left,
+            padding='same',
             use_bias=False)
         self.weight_norm_1 = LayerNormalization()
         self.dropout_1 = Dropout(rate=dropout_rate)
@@ -32,13 +33,17 @@ class ResidualBlock(Layer):
         self.causal_conv_2 = Conv1D(
             filters=self.filters,
             kernel_size=kernel_size,
-            dilation_rate=dilation_rate,
-            padding='causal',
+            dilation_rate=dilation_rate_right,
+            padding='same',
             use_bias=False)
         self.weight_norm_2 = LayerNormalization()
         self.dropout_2 = Dropout(rate=dropout_rate)
         self.activation_2 = Activation(activation)
 
+        self.multi = Concatenate()
+        self.dropout = Dropout(dropout_rate)
+        self.conv_1x1_out = Conv1D(filters, kernel_size=1, padding='same')
+        self.add = Add()
         self.activation_3 = Activation(activation)
 
     def build(self, input_shape):
@@ -59,17 +64,21 @@ class ResidualBlock(Layer):
         else:
             skip = self.skip_conv(inputs)
 
-        x = self.causal_conv_1(inputs)
-        x = self.weight_norm_1(x)
-        x = self.activation_1(x)
-        x = self.dropout_1(x, training=training)
+        x0 = self.causal_conv_1(inputs)
+        x0 = self.weight_norm_1(x0)
+        x0 = self.activation_1(x0)
+        x0 = self.dropout_1(x0, training=training)
 
-        x = self.causal_conv_2(x)
-        x = self.weight_norm_2(x)
-        x = self.activation_2(x)
-        x = self.dropout_2(x, training=training)
+        x1 = self.causal_conv_2(inputs)
+        x1 = self.weight_norm_2(x1)
+        x1 = self.activation_2(x1)
+        x1 = self.dropout_2(x1, training=training)
 
-        x = self.activation_3(x + skip)
+        x = self.multi([x0, x1])
+        x = self.dropout(x)
+        x = self.activation_3(x)
+        x = self.conv_1x1_out(x)
+        x = self.add([x, skip])
         return x
 
     def get_config(self):
@@ -91,7 +100,7 @@ class TCN(Layer):
             kernel_size: int = 3,
             return_sequence: bool = False,
             dropout_rate: float = 0.25,
-            activation: str = "relu",
+            activation: str = "relu6",
             **kwargs):
 
         super(TCN, self).__init__(**kwargs)
@@ -101,12 +110,15 @@ class TCN(Layer):
         self.return_sequence = return_sequence
 
         for i in range(self.depth):
-            dilation_size = 2 ** i
+            dilation_size_left = 2 ** i
+            dilation_size_right = 2 ** (self.depth-1-i)
+
             self.blocks.append(
                 ResidualBlock(
                     filters=filters[i],
                     kernel_size=kernel_size,
-                    dilation_rate=dilation_size,
+                    dilation_rate_left=dilation_size_left,
+                    dilation_rate_right=dilation_size_right,
                     dropout_rate=dropout_rate,
                     activation=activation,
                     name=f"residual_block_{i}"

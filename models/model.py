@@ -252,23 +252,25 @@ def TCN_LPR():
     t1 = x
     x = MaxPool2D(padding='SAME')(x)
 
-    x = Separable_Conv(128, kernel_size=3, name='separable_conv_2')(x)
+    x = Separable_Conv(128, kernel_size=3, name='separable_conv_3')(x)
     t2 = x
     x = MaxPool2D(padding='SAME')(x)
 
-    x = Separable_Conv(256, kernel_size=3, name='separable_conv_3')(x)
+    x = Separable_Conv(256, kernel_size=3, name='separable_conv_4')(x)
     t3 = x
     # x = MaxPool2D(padding='SAME')(x)
 
-    g1 = GCM(4)(t1)
-    g2 = GCM(2)(t2)
-    g3 = GCM(1)(t3)
-    x = Concatenate(axis=-1)([g1, g2, g3])
+    # g1 = GCM(4)(t1)
+    # g2 = GCM(2)(t2)
+    # g3 = GCM(1)(t3)
+    # x = Concatenate(axis=-1)([g1, g2, g3])
 
-    # x = PCM(256)([t1, t2, t3])
+    x = PCM(256)([t1, t2, t3])
+
+    # x = Dropout(rate=0.25)(x)
 
     x = TCN([128]*6, kernel_size=3)(x)
-    # x = MS_TCN(128, kernel_size=3, depth=8)(x)
+    # x = MS_TCN(128, kernel_size=3, depth=5)(x)
 
     x = Dense(NUM_CLASS, kernel_initializer='he_normal',
               activation='softmax', name='softmax0')(x)
