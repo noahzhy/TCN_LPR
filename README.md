@@ -15,17 +15,20 @@
 
 ## Detail
 
-|           Original image            |              R channel              |              G channel              |              B channel              |
-| :---------------------------------: | :---------------------------------: | :---------------------------------: | :---------------------------------: |
+|         Original image         |           R channel            |           G channel            |           B channel            |
+| :----------------------------: | :----------------------------: | :----------------------------: | :----------------------------: |
 | ![Figure_1](docs/Figure_1.png) | ![Figure_R](docs/Figure_R.png) | ![Figure_G](docs/Figure_G.png) | ![Figure_B](docs/Figure_B.png) |
 
 上方表格左侧为韩国常见的几种车牌类型，通过对其RGB通道单独分离不难看出，在单独G通道下，车牌的显像效果最为显著，受影响较小。
 
 ## FLOPs
 
-|Model|FLOPs (G)|
-|:---:|:---:|
-|TCNLPR| 0.23|
+|       Model        | Single-row Recognition Accuracy (%) | Double-row Recognition Accuracy (%) |  GFLOPs   |
+| :----------------: | ----------------------------------- | ----------------------------------- | :-------: |
+|  LPRNet baseline   | 94.1*                               | N/A                                 |   0.71    |
+|    LPRNet basic    | 95.0*                               | N/A                                 |   0.34    |
+|   LPRNet reduced   | 94.0*                               | N/A                                 |   0.163   |
+| **TCN-LPR (Ours)** | **99.5**                            | **97.8**                            | **0.232** |
 
 ## Todo
 
