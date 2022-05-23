@@ -17,6 +17,27 @@ from PIL import Image
 from tensorflow import keras
 from tensorflow.python.framework.convert_to_constants import \
     convert_variables_to_constants_v2
+import cv2
+
+
+
+
+
+
+# show the different license plate in B, G, R single channel
+def pick_channel(image, channel_name='G'):
+    assert channel_name in list('BGR')
+    channel_index = list('BGR').index(channel_name)
+    return cv2.split(image)[channel_index]
+
+
+def image_preprocess(image_path, channel_name='G'):
+    img = cv2.imdecode(np.fromfile(
+        image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    img = cv2.resize(img, (96, 32))
+    img = pick_channel(img, channel_name)
+    img = np.expand_dims(img, axis=-1)
+    return img/255.
 
 
 class RepresentativeDataset:
@@ -28,10 +49,16 @@ class RepresentativeDataset:
     def __call__(self):
         representative_list = random.sample(glob(os.path.join(self.val_dir, "*.jpg")), self.sample_size)
         for image_path in representative_list:
-            input_data = Image.open(image_path).convert('L').resize(self.img_size)
-            input_data = np.expand_dims(input_data, axis=-1)
-            input_data = np.expand_dims(input_data, axis=0)
-            input_data = input_data.astype('float32')
+            # input_data = Image.open(image_path).convert('L').resize(self.img_size)
+            input_data = image_preprocess(image_path)
+            # Image.fromarray(input_data[:, :, 0]).show()
+            # quit()
+            # input_data = np.expand_dims(input_data, axis=-1)
+            # input_data = np.expand_dims(input_data, axis=0)
+            # input_data = input_data.astype('float32')
+            input_data = tf.reshape(input_data, [-1, 32, 96, 1])
+            input_data = tf.cast(input_data, tf.float32)
+            print("="*80, np.max(input_data))
             yield [input_data]
 
 
@@ -140,7 +167,7 @@ def quantization2tflite(
 
     # only for test
     converter.allow_custom_ops = True
-    converter.experimental_new_converter = True
+    # converter.experimental_new_converter = True
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     # for Float16 quantization
     # converter.target_spec.supported_types = [tf.float16]
@@ -169,8 +196,8 @@ if __name__ == '__main__':
     IMG_SIZE = (96, 32)
     VAL_DIR = 'D:/dataset/license_plate/mini_LPR_dataset/val'
     QUANTIZATION_SAMPLE_SIZE = 200
-    MODEL_PATH = 'model_tf_9770'
+    MODEL_PATH = 'tf_version/model_tf_9770'
 
     quantization_dataset = RepresentativeDataset(VAL_DIR, IMG_SIZE, QUANTIZATION_SAMPLE_SIZE)
     pb_path, input_name, output_name = saved_model2pb(MODEL_PATH)
-    quantization2tflite(pb_path, 'pb', input_name, output_name, representative_dataset=quantization_dataset)
+    quantization2tflite(pb_path, 'pb', input_name, output_name, quantization_mode=tf.uint8, representative_dataset=quantization_dataset)
