@@ -20,10 +20,6 @@ from tensorflow.python.framework.convert_to_constants import \
 import cv2
 
 
-
-
-
-
 # show the different license plate in B, G, R single channel
 def pick_channel(image, channel_name='G'):
     assert channel_name in list('BGR')
@@ -49,14 +45,14 @@ class RepresentativeDataset:
     def __call__(self):
         representative_list = random.sample(glob(os.path.join(self.val_dir, "*.jpg")), self.sample_size)
         for image_path in representative_list:
-            # input_data = Image.open(image_path).convert('L').resize(self.img_size)
-            input_data = image_preprocess(image_path)
+            # input_data = image_preprocess(image_path)
             # Image.fromarray(input_data[:, :, 0]).show()
             # quit()
-            # input_data = np.expand_dims(input_data, axis=-1)
-            # input_data = np.expand_dims(input_data, axis=0)
-            # input_data = input_data.astype('float32')
-            input_data = tf.reshape(input_data, [-1, 32, 96, 1])
+            input_data = Image.open(image_path).convert('L').resize(self.img_size)
+            input_data = np.expand_dims(input_data, axis=-1)
+            input_data = np.expand_dims(input_data, axis=0)
+            input_data = input_data.astype('float32')
+            input_data = tf.reshape(input_data, [-1, self.img_size[1], self.img_size[0], 1])
             input_data = tf.cast(input_data, tf.float32)
             print("="*80, np.max(input_data))
             yield [input_data]
@@ -164,6 +160,9 @@ def quantization2tflite(
             input_arrays = [input_node],
             output_arrays = [output_node],
         )
+    tflite_model = converter.convert()
+    open('{}.tflite'.format(save_name), "wb").write(tflite_model)
+    quit()
 
     # only for test
     converter.allow_custom_ops = True
@@ -171,7 +170,7 @@ def quantization2tflite(
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     # for Float16 quantization
     # converter.target_spec.supported_types = [tf.float16]
-    converter.representative_dataset = representative_dataset
+    # converter.representative_dataset = representative_dataset
 
     converter.target_spec.supported_ops = [
         tf.lite.OpsSet.TFLITE_BUILTINS,
@@ -200,4 +199,4 @@ if __name__ == '__main__':
 
     quantization_dataset = RepresentativeDataset(VAL_DIR, IMG_SIZE, QUANTIZATION_SAMPLE_SIZE)
     pb_path, input_name, output_name = saved_model2pb(MODEL_PATH)
-    quantization2tflite(pb_path, 'pb', input_name, output_name, quantization_mode=tf.uint8, representative_dataset=quantization_dataset)
+    quantization2tflite(pb_path, 'pb', input_name, output_name, quantization_mode=tf.float32, representative_dataset=quantization_dataset)
